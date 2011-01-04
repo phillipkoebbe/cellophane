@@ -34,7 +34,7 @@ module Cellophane
 				# This displays the help screen, all programs are assumed to have this option.
 				opts.on( '-h', '--help', 'Display this screen.' ) do
 					puts opts
-					exit
+					exit(0)
 				end
 			end
 
