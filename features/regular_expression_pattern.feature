@@ -2,7 +2,7 @@ Feature: Regular Expression Pattern
 
 Background:
 
-Given a typical project directory
+Given a standard project directory
 
 Scenario: Features that match the pattern exist
 

@@ -16,12 +16,15 @@ Given /^Cellophane is called with no arguments$/ do
 	call_cellophane
 end
 
-Given /^a (typical|custom) project directory$/ do |project_type|
+Given /^a (standard|non-standard) project directory$/ do |project_type|
 	@project_dir = './test_project'
+	# just in case the last run failed to exit cleanly, delete the test_project directory
+	# if it exists
+	FileUtils.remove_dir(@project_dir, true) if File.exist?(@project_dir)
 	FileUtils.mkdir(@project_dir)
 	Dir.chdir(@project_dir)
 
-	if project_type == 'typical'
+	if project_type == 'standard'
 		@feature_dir = "features"
 		@step_dir = "#{@feature_dir}/step_definitions"
 		FileUtils.mkdir_p(@step_dir)
@@ -29,7 +32,7 @@ Given /^a (typical|custom) project directory$/ do |project_type|
 		@feature_dir = "cuke/features"
 		@step_dir = "cuke/steps"
 		@support_dir = "cuke/support"
-		[@project_dir, @feature_dir, @step_dir, @support_dir].each { |dir| FileUtils.mkdir_p(dir) }
+		[@feature_dir, @step_dir, @support_dir].each { |dir| FileUtils.mkdir_p(dir) }
 	end
 
 	# make some features

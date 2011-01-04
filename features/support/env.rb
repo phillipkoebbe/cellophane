@@ -1,4 +1,3 @@
-
 $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../../lib')
 require 'cellophane/main'
 require 'rspec/expectations'

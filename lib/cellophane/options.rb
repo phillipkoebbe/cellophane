@@ -49,32 +49,35 @@ module Cellophane
 		private
 		
 		def self.get_options(type = :default)
-			case type
-				when :project
-					options = {}
-					if File.exist?("#{Dir.pwd}/.cellophane.rb")
-						require "#{Dir.pwd}/.cellophane.rb" 
-					
-						options = self.respond_to?(:project_options) ? self.project_options : {}
-					end
-					
-					options
-				else
-					{
-						:pattern => nil,
-						:regexp => false,
-						:print => false,
-						:cucumber => nil,
-						:tags => nil,
-						:feature_path => 'features',
-						:feature_path_regexp => nil,
-						:step_path => 'features/step_definitions',
-						:requires => []
-					}
-			end # case type
+			if type == :project
+				project_options_file = "./.cellophane.rb"
+				
+				# load is used here due to require not requiring a file if
+				# it has already been required. This is mainly for testing
+				# purposes (multiple features needing to have different
+				# options for validation), but it shouldn't make a difference
+				# for run time.
+				load project_options_file if File.exist?(project_options_file)
+
+				self.respond_to?(:project_options) ? self.project_options : {}
+			else
+				{
+					:pattern => nil,
+					:regexp => false,
+					:print => false,
+					:cucumber => nil,
+					:tags => nil,
+					:feature_path => 'features',
+					:feature_path_regexp => nil,
+					:step_path => 'features/step_definitions',
+					:requires => []
+				}
+			end
 		end # get_options
 		
 		def self.normalize_options(options)
+			defaults = self.get_options(:default)
+
 			# ran into freezing problems in Ruby 1.9.2 otherwise
 			tmp_options = options.dup
 			
@@ -94,12 +97,15 @@ module Cellophane
 				tmp_options[path] = tmp_options[path].sub(/\/$/, '')
 			end
 			
+			# need to know this later
+			tmp_options[:non_standard_feature_path] = tmp_options[:feature_path] != defaults[:feature_path]
+			tmp_options[:non_standard_step_path] = tmp_options[:step_path] != defaults[:step_path]
+			
 			# make a regexp out of the features path if there isn't one already. we need to escape slashes so the
 			# regexp can be made
 			tmp_options[:feature_path_regexp] = Regexp.new(tmp_options[:feature_path].gsub('/', '\/')) unless tmp_options[:feature_path_regexp]
 			
 			# just in case someone sets necessary values to nil, let's go back to defaults
-			defaults = self.get_options(:default)
 			tmp_options[:regexp] ||= defaults[:regexp]
 			tmp_options[:feature_path] ||= defaults[:feature_path]
 			tmp_options[:step_path] ||= defaults[:step_path]

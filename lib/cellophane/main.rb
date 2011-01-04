@@ -8,7 +8,6 @@ module Cellophane
 		
 		def initialize(args = nil)
 			args ||= ARGV
-			#debugger
 			@options = Cellophane::Options.parse(args)
 			
 			@message = 'Invalid regular expression provided.' and return if @options[:regexp] && @options[:pattern].nil?
@@ -31,20 +30,30 @@ module Cellophane
 		private
 		
 		def generate_command
-			feature_files = []
-			step_files = []
-			@features.each do |file|
-				file_parts = split_feature(file)
-				feature_files << construct_feature_file(file_parts[:path], file_parts[:name])
-				step_files << construct_step_file(file_parts[:path], file_parts[:name])
-			end
-
 			cuke_cmd = "cucumber #{@options[:cucumber]}"
 
-			requires = (@options[:requires] + step_files).compact.uniq
+			features = []
+			steps = []
+
+			if @features.any?
+				@features.each do |file|
+					file_parts = split_feature(file)
+					features << construct_feature_file(file_parts[:path], file_parts[:name])
+					steps << construct_step_file(file_parts[:path], file_parts[:name])
+				end
+				
+			else
+				# if there are no features explicitly identified, then cucumber will run all. However,
+				# if we are using non-standard locations for features or step definitions, we must tell
+				# cucumber accordingly
+				features << @options[:feature_path] if @options[:non_standard_feature_path]
+				steps << @options[:step_path] if @options[:non_standard_step_path]
+			end
+
+			requires = (@options[:requires] + steps).compact.uniq
 			cuke_cmd += " -r #{requires.join(' -r ')}" if requires.any?
-			
-			return "#{cuke_cmd} #{feature_files.join(' ')} #{@tags}".gsub('  ', ' ')
+			cuke_cmd += " #{features.join(' ')}" if features.any?
+			return "#{cuke_cmd} #{@tags}".gsub('  ', ' ')
 		end
 		
 		def construct_feature_file(path, file)
