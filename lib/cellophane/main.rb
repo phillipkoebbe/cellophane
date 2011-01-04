@@ -1,26 +1,36 @@
 require 'fileutils'
 require 'cellophane/parser'
-require 'cellophane/configuration'
+require 'cellophane/options'
 
 module Cellophane
-	class CellophaneException < Exception
-	end
-	
 	class Main
-		def initialize
-			@options = Cellophane::Configuration.new.options
+		attr_reader :command, :message
+		
+		def initialize(args = nil)
+			args ||= ARGV
+			#debugger
+			@options = Cellophane::Options.parse(args)
 			
-			raise CellophaneException.new('Improper regular expression provided.') if @options[:regexp] && @options[:pattern].nil?
+			@message = 'Invalid regular expression provided.' and return if @options[:regexp] && @options[:pattern].nil?
 			
 			parser = Cellophane::Parser.new(@options)
 			@features = parser.features
 			
-			raise CellophaneException.new('No features matching pattern were found.') unless @features
+			@message = 'No features matching PATTERN were found.' and return unless @features
 			
 			@tags = parser.tags
+			
+			@command = generate_command
 		end
 
 		def run
+			puts @message and return if @message
+			@options[:print] ? puts(@command) : system("#{@command}\n\n")
+		end
+		
+		private
+		
+		def generate_command
 			feature_files = []
 			step_files = []
 			@features.each do |file|
@@ -34,10 +44,8 @@ module Cellophane
 			requires = (@options[:requires] + step_files).compact.uniq
 			cuke_cmd += " -r #{requires.join(' -r ')}" if requires.any?
 			
-			execute "#{cuke_cmd} #{feature_files.join(' ')} #{@tags}".gsub('  ', ' ')
+			return "#{cuke_cmd} #{feature_files.join(' ')} #{@tags}".gsub('  ', ' ')
 		end
-		
-		private
 		
 		def construct_feature_file(path, file)
 			"#{@options[:feature_path]}/#{path}/#{file}.feature".gsub('//', '/')
@@ -49,10 +57,6 @@ module Cellophane
 			return File.exist?(step_file) ? step_file : nil
 		end
 		
-		def execute(cmd)
-			@options[:dry_run] ? puts(cmd) : system("#{cmd}\n\n")
-		end
-
 		def split_feature(file)
 			name = File.basename(file, '.feature')
 			# now get rid of the file_name and the feature_path
