@@ -6,6 +6,10 @@ Before do
 	@initial_dir = Dir.pwd
 end
 
+Before('@debug') do
+	require 'ruby-debug'
+end
+
 After do
 	Dir.chdir(@initial_dir)
 
