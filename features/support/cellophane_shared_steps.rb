@@ -12,8 +12,8 @@ def output_message
 	puts "\n\n#{@message}\n\n"
 end
 
-Given /^Cellophane is called with no arguments$/ do
-	call_cellophane
+Given /^Cellophane is called with "([^"]*)"$/ do |args|
+	call_cellophane(args.split(' '))
 end
 
 Given /^a (standard|non-standard) project directory$/ do |project_type|
@@ -46,3 +46,10 @@ Given /^a (standard|non-standard) project directory$/ do |project_type|
 	File.open("#{@step_dir}/four_steps.rb", 'w') {|f| f.write('# Four steps') }
 end
 
+Given /^the (command|message) should include "([^"]+)"$/ do |what, expected|
+	(what == 'command' ? @command : @message).should =~ /#{expected}/
+end
+
+Given /^the (command|message) should not include "([^"]+)"$/ do |what, expected|
+	(what == 'command' ? @command : @message).should_not =~ /#{expected}/
+end

@@ -8,8 +8,7 @@ end
 
 After do
 	Dir.chdir(@initial_dir)
-	return if @project_dir.nil?
 
 	# delete the test project directory if present
-	FileUtils.remove_dir(@project_dir, true) if File.exist?(@project_dir)
+	FileUtils.remove_dir(@project_dir, true) if @project_dir && File.exist?(@project_dir)
 end

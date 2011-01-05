@@ -6,15 +6,18 @@ Given a standard project directory
 
 Scenario: Features that match the pattern exist
 
-When Cellophane is called with a good regular expression
-Then the command should include only the correct files
+When Cellophane is called with "-r (?:one|four)"
+Then the command should include "one.feature"
+And the command should include "four.feature"
+And the command should not include "two.feature"
+And the command should not include "three.feature"
 
 Scenario: Features that match the pattern do not exist
 
-When Cellophane is called with a bad regular expression
-Then the 'No features matching PATTERN were found.' message should display
+When Cellophane is called with "-r somebadregularexpression"
+Then the message should include "No features matching PATTERN were found"
 
 Scenario: An invalid regular expression is submitted
 
-When Cellophane is called with an invalid regular expression
-Then the 'Invalid regular expression provided.' message should display
+When Cellophane is called with "-r "
+Then the message should include "Invalid regular expression provided"

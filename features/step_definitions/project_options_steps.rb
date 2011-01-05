@@ -14,7 +14,3 @@ Given /^a project specific options file exists in the project root$/ do
 	# already in the project dir
 	File.open('.cellophane.rb', 'w') {|f| f.write(contents) }
 end
-
-Given /^the command should include the project specific options$/ do
-	@command.should =~ /--format progress --no-profile/
-end
