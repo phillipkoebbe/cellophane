@@ -12,53 +12,55 @@ module Cellophane
 		end # features
 
 		def tags
-			only = []
-			except = []
-			tag_pattern = @options[:tags]
+			tags = {
+				:or => [],
+				:and => [],
+				:not => []
+			}
 
-			tags = ''
+			return '' if @options[:tags].nil?
 
-			unless tag_pattern.nil?
-				# going to either run certain ones or exclude certain ones
-				tag_pattern.split(',').each do |t|
-					# if tags are numeric, let's support ranges !!!
-					if t =~ /^(~)?([0-9]+)-([0-9]+)$/
-						x = $2.to_i
-						y = $3.to_i
-						exclude = $1
-						
-						# in case the user put them in the wrong order ... doh!
-						if x > y
-							z = x.dup
-							x = y.dup
-							y = z.dup
-						end
-						
-						(x..y).each do |i|
-							if exclude
-								except << "~@#{i}"
-							else
-								only << "@#{i}"
-							end
-						end
-					else
-						if t[0].chr == '~'
-							except << "~@#{t[1..t.length]}"
+			@options[:tags].split(',').each do |t|
+				# if tags are numeric, let's support ranges !!!
+				if t =~ /^(~)?([0-9]+)-([0-9]+)$/
+					x = $2.to_i
+					y = $3.to_i
+					exclude = $1
+				
+					# in case the user put them in the wrong order ... doh!
+					if x > y
+						z = x.dup
+						x = y.dup
+						y = z.dup
+					end
+				
+					(x..y).each do |i|
+						if exclude
+							tags[:not] << "~@#{i}"
 						else
-							only << "@#{t}"
+							tags[:or] << "@#{i}"
 						end
 					end
+				else
+					if t[0].chr == '~'
+						tags[:not] << "~@#{t[1..t.length]}"
+					elsif t[0].chr == '+'
+						tags[:and] << "@#{t[1..t.length]}"
+					else
+						tags[:or] << "@#{t}"
+					end
 				end
+			end # each
 
-				only.uniq!
-				except.uniq!
-				
-				tags += "-t #{only.join(',')} " if only.any?
-				tags += "-t #{except.join(' -t ')}" if except.any?
-			end
+			[:and, :or, :not].each { |type| tags[type].uniq! }
+		
+			tags_fragment = ''
+			tags_fragment += "-t #{tags[:or].join(',')} " if tags[:or].any?
+			tags_fragment += "-t #{tags[:and].join(' -t ')} " if tags[:and].any?
+			tags_fragment += "-t #{tags[:not].join(' -t ')}" if tags[:not].any?
 	
 			# if the user passes in tags with @ already in it
-			tags.gsub('@@', '@')
+			tags_fragment.gsub('@@', '@')
 		end # def self.parse_tags
 		
 		private
