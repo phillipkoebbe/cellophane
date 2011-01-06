@@ -17,10 +17,10 @@ Given a project directory with the following structure
  | directory | cuke/features |
  | directory | cuke/steps    |
 And a project options file with the following options
- | option                           |
- | :feature_path => 'cuke/features' |
- | :step_path => 'cuke/steps'       |
- | :requires => ['cuke/support']    |
+ | option                      |
+ | feature_path: cuke/features |
+ | step_path: cuke/steps       |
+ | requires: [cuke/support]    |
 When Cellophane is called with ""
 Then the command should include "cuke/features"
 And the command should include "-r cuke/steps"

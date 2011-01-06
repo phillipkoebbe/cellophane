@@ -1,0 +1,7 @@
+cucumber: --format progress --no-profile
+feature_path: cuke/features
+step_path: cuke/steps
+# step_path: 
+#   nested_in: step_definitions
+requires:
+  - cuke/support

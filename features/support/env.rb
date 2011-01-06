@@ -3,7 +3,8 @@ require 'cellophane/main'
 require 'rspec/expectations'
 
 Before do
-	@initial_dir = Dir.pwd
+	save_initial_dir
+	ensure_project_dir_removed
 end
 
 Before('@debug') do
@@ -11,8 +12,6 @@ Before('@debug') do
 end
 
 After do
-	Dir.chdir(@initial_dir)
-
-	# delete the test project directory if present
-	FileUtils.remove_dir(@project_dir, true) if @project_dir && File.exist?(@project_dir)
+	restore_initial_dir
+	ensure_project_dir_removed
 end

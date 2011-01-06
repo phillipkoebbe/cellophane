@@ -7,8 +7,8 @@ Given a project directory with the following structure
  | directory | features                  |
  | directory | features/step_definitions |
 And a project options file with the following options
- | option                                        |
- | :cucumber => '--format progress --no-profile' |
+ | option                                   |
+ | cucumber: --format progress --no-profile |
 When Cellophane is called with ""
 Then the command should include "--format progress --no-profile"
 
@@ -19,8 +19,8 @@ Given a project directory with the following structure
  | directory | features                  |
  | directory | features/step_definitions |
 And a project options file with the following options
- | option                                        |
- | :cucumber => '--format progress --no-profile' |
+ | option                                   |
+ | cucumber: --format progress --no-profile |
 When Cellophane is called with "-c --format=pretty"
 Then the command should include "--format=pretty"
 And the command should not include "progress"

@@ -1,0 +1,1 @@
+cucumber: --format progress --no-profile

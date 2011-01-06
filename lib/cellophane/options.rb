@@ -1,9 +1,12 @@
 require 'optparse'
+require 'yaml'
 
 module Cellophane
 	class Options
 		def self.parse(args)
-			merged_options = self.get_options(:default).merge(self.get_options(:project))
+			default_options = self.get_options(:default)
+			project_options = self.get_options(:project)
+			merged_options = default_options.merge(project_options)
 			
 			option_parser = OptionParser.new do |opts|
 				# Set a banner, displayed at the top of the help screen.
@@ -50,16 +53,24 @@ module Cellophane
 		
 		def self.get_options(type = :default)
 			if type == :project
-				project_options_file = "./.cellophane.rb"
+				project_options = {}
 				
 				# load is used here due to require not requiring a file if
 				# it has already been required. This is mainly for testing
 				# purposes (multiple features needing to have different
 				# options for validation), but it shouldn't make a difference
 				# for run time.
-				load project_options_file if File.exist?(project_options_file)
-
-				self.respond_to?(:project_options) ? self.project_options : {}
+				#load project_options_file if File.exist?(project_options_file)
+				
+				if File.exist?(Cellophane::PROJECT_OPTIONS_FILE)
+					yaml_options = YAML.load_file(Cellophane::PROJECT_OPTIONS_FILE)
+					
+					['cucumber', 'feature_path', 'feature_path_regexp', 'step_path', 'requires'].each do |key|
+						project_options[key.to_sym] = yaml_options[key] if yaml_options.has_key?(key)
+					end
+				end
+				
+				project_options
 			else
 				{
 					:pattern => nil,
@@ -81,20 +92,24 @@ module Cellophane
 			# ran into freezing problems in Ruby 1.9.2 otherwise
 			tmp_options = options.dup
 			
-			paths = [:feature_path]
-			
-			# options[:steps] might look like {:nested => 'dirname'} to indicate the steps
-			# are nested under the feature directory (see documentation)
-			paths << :step_path unless tmp_options[:step_path].is_a?(Hash)
-			
 			# normalize the paths for features and steps
-			paths.each do |path|
-				# had originally used the gsub! and sub!, but hit freezing problems with Ruby 1.9.2
-				# globs don't work with backslashes (if on windows)
-				tmp_options[path] = tmp_options[path].gsub(/\\/, '/')
-				
-				# strip trailing slash
-				tmp_options[path] = tmp_options[path].sub(/\/$/, '')
+			# had originally used the gsub! and sub!, but hit freezing problems with Ruby 1.9.2
+			
+			# globs don't work with backslashes (if on windows)
+			tmp_options[:feature_path] = tmp_options[:feature_path].gsub(/\\/, '/')
+			# strip trailing slash
+			tmp_options[:feature_path] = tmp_options[:feature_path].sub(/\/$/, '')
+
+			if tmp_options[:step_path].is_a?(Hash)
+				# if the step path is configured in YAML, it will be a string key, not a symbol
+				key = tmp_options[:step_path].has_key?('nested_in') ? 'nested_in' : :nested_in
+				if tmp_options[:step_path].has_key?(key)
+					tmp_options[:step_path][:nested_in] = tmp_options[:step_path][key].gsub(/\\/, '/')
+					tmp_options[:step_path][:nested_in] = tmp_options[:step_path][key].sub(/\/$/, '')
+				end
+			else
+				tmp_options[:step_path] = tmp_options[:step_path].gsub(/\\/, '/')
+				tmp_options[:step_path] = tmp_options[:step_path].sub(/\/$/, '')
 			end
 			
 			# need to know this later

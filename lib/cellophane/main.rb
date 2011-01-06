@@ -3,11 +3,15 @@ require 'cellophane/parser'
 require 'cellophane/options'
 
 module Cellophane
+	
+	PROJECT_OPTIONS_FILE = '.cellophane.yaml'
+	
 	class Main
-		attr_reader :command, :message
+		attr_reader :command, :message, :project_options_file
 		
 		def initialize(args = nil)
 			args ||= ARGV
+			@project_options_file = Cellophane::PROJECT_OPTIONS_FILE
 			@options = Cellophane::Options.parse(args)
 			
 			@message = 'Invalid regular expression provided.' and return if @options[:regexp] && @options[:pattern].nil?
@@ -61,7 +65,7 @@ module Cellophane
 		end
 		
 		def construct_step_file(path, file)
-			step_path = @options[:step_path].is_a?(Hash) ? "#{options[:feature_path]}/#{path}/#{@options[:step_path][:nested_in]}" : "#{@options[:step_path]}/#{path}"
+			step_path = @options[:step_path].is_a?(Hash) ? "#{@options[:feature_path]}/#{path}/#{@options[:step_path][:nested_in]}" : "#{@options[:step_path]}/#{path}"
 			step_file = "#{step_path}/#{file}_steps.rb".gsub('//', '/')
 			return File.exist?(step_file) ? step_file : nil
 		end

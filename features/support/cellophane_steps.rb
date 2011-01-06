@@ -36,18 +36,8 @@ end
 Given /^a project options file with the following options$/ do |lines|
 	options = lines.hashes.collect { |line| line[:option] }
 	
-	contents = "
-		module Cellophane
-			class Options
-				def self.project_options
-		            {
-						#{options.join(",\n")}
-		            }
-				end
-			end
-		end
-	"
+	contents = options.join("\n")
 	
 	# already in the project dir
-	File.open('.cellophane.rb', 'w') {|f| f.write(contents) }
+	File.open(Cellophane::PROJECT_OPTIONS_FILE, 'w') { |f| f.write(contents) }
 end
