@@ -1,7 +1,5 @@
 Feature: Tags
 
-Background:
-
 Scenario: OR tag
 
 When Cellophane is called with "-t one,two"
