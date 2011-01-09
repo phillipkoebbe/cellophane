@@ -35,7 +35,8 @@ Scenario: Numeric NOT tag ranges
 When Cellophane is called with "-t ~1-3"
 Then the command should include "-t ~@1 -t ~@2 -t ~@3"
 
+@focus
 Scenario: Numeric OR tag range with a NOT
 
 When Cellophane is called with "-t 1-3,~2"
-Then the command should include "-t @1,@2,@3 -t ~@2"
+Then the command should include "-t @1,@3"

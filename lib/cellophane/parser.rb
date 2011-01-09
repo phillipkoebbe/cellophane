@@ -36,24 +36,43 @@ module Cellophane
 				
 					(x..y).each do |i|
 						if exclude
-							tags[:not] << "~@#{i}"
+							tags[:not] << "#{i}"
 						else
-							tags[:or] << "@#{i}"
+							tags[:or] << "#{i}"
 						end
 					end
 				else
-					if t[0].chr == '~'
-						tags[:not] << "~@#{t[1..t.length]}"
-					elsif t[0].chr == '+'
-						tags[:and] << "@#{t[1..t.length]}"
+					if t =~ /^~(.+)/
+						tags[:not] << $1
+					elsif t =~ /^\+(.+)/
+						tags[:and] << $1
 					else
-						tags[:or] << "@#{t}"
+						tags[:or] << t
 					end
 				end
 			end # each
 
 			[:and, :or, :not].each { |type| tags[type].uniq! }
-		
+			
+			# if there are AND/OR tags, remove any NOT tags so we avoid
+			# duplicating the tag when passing to cucumber...so instead of
+			# cucumber -t @1,@2,@3 -t ~@2
+			# we'd like to see
+			# cucumber -t @1,@3
+
+			intersection = tags[:or] & tags[:not]
+			tags[:or] -= intersection
+			tags[:not] -= intersection
+
+			intersection = tags[:and] & tags[:not]
+			tags[:and] -= intersection
+			tags[:not] -= intersection
+
+			# now add @ and ~ as appropriate
+			tags[:or].each_with_index { |tag, i| tags[:or][i] = "@#{tag}" }
+			tags[:and].each_with_index { |tag, i| tags[:and][i] = "@#{tag}" }
+			tags[:not].each_with_index { |tag, i| tags[:not][i] = "~@#{tag}" }
+
 			tags_fragment = ''
 			tags_fragment += "-t #{tags[:or].join(',')} " if tags[:or].any?
 			tags_fragment += "-t #{tags[:and].join(' -t ')} " if tags[:and].any?
