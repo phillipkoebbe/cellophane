@@ -150,6 +150,10 @@ requires: [cuke/support, /Users/me/shared/cool_library]
 
 @-r cuke/support -r /Users/me/shared/cool_library@ will be passed to Cucumber.
 
+Other configurable options:
+
+@cuke_command@ can be set to whatever command you use to invoke cucumber. By default, it is simply @cucumber@, but you could also use @bundler exec cucumber@, @script/cucumber@, or an alias you might have defined.
+
 h3. Operation
 
 Cellophane has the following command line options:

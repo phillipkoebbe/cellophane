@@ -34,7 +34,7 @@ module Cellophane
 		private
 		
 		def generate_command
-			cuke_cmd = "cucumber #{@options[:cucumber]}"
+			cuke_cmd = "#{@options[:cuke_command]} #{@options[:cucumber]}"
 
 			features = []
 			steps = []

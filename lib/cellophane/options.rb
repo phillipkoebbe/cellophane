@@ -65,7 +65,7 @@ module Cellophane
 				if File.exist?(Cellophane::PROJECT_OPTIONS_FILE)
 					yaml_options = YAML.load_file(Cellophane::PROJECT_OPTIONS_FILE)
 					
-					['cucumber', 'feature_path', 'feature_path_regexp', 'step_path', 'requires'].each do |key|
+					['cucumber', 'cuke_command', 'feature_path', 'feature_path_regexp', 'step_path', 'requires'].each do |key|
 						project_options[key.to_sym] = yaml_options[key] if yaml_options.has_key?(key)
 					end
 				end
@@ -77,6 +77,7 @@ module Cellophane
 					:regexp => false,
 					:print => false,
 					:cucumber => nil,
+					:cuke_command => 'cucumber',
 					:tags => nil,
 					:feature_path => 'features',
 					:feature_path_regexp => nil,
@@ -125,6 +126,7 @@ module Cellophane
 			tmp_options[:feature_path] ||= defaults[:feature_path]
 			tmp_options[:step_path] ||= defaults[:step_path]
 			tmp_options[:requires] ||= defaults[:requires]
+			tmp_options[:cuke_command] ||= defaults[:cuke_command]
 			
 			# do what needs to be done on the pattern
 			unless tmp_options[:pattern].nil?
