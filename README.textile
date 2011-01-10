@@ -1,0 +1,269 @@
+h1. Cellophane
+
+Cellophane is a thin wrapper around "Cucumber":http://github.com/aslakhellesoy/cucumber that is intended to make it easier to structure projects in ways that make sense to the people working on them. It has been tested with Cucumber 0.10.0 on Ruby 1.8.7-p302 and Ruby 1.9.2-p0.
+
+h3. Installation
+
+@gem install cellophane@
+
+h3. History
+
+By default, Cucumber expects features to live in @features@ and step definitions to live in @features/step_definitions@. When running a feature, all step definitions are loaded unless you explicitly require just the ones you want. If you structure your project differently, you have to require files explicitly, which gets old real fast.
+
+After some experimenting with different directory structures, I settled on the following for my own projects:
+
+<pre>
+my_project
+	- app
+	- config
+	- cuke
+		- features
+		- steps
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+It's based on the structure of the @spec@ directory and I find that it fits my brain pretty well. There are three organizational strategies that I found myself following:
+
+# separation of features in subdirectories
+# keeping feature specific steps in files that are named according to the feature
+# keeping all shared steps in files that are named in a more generalized fashion
+
+For example, a project my look like this:
+
+<pre>
+my_project
+	- app
+	- config
+	- cuke
+		- features
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- steps
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+If the features in @cuke/features/admin/reports@ had any steps that were specific to them, they would live @cuke/steps/admin/reports@. Any steps that are shared between two or more features would go in files in @cuke/support@.
+
+To use this structure in Cucumber requires explicitly requiring the files/directories with every run. To run all of the features in @cuke/features/admin/reports@, I would enter the command
+
+<pre>
+cucumber -r cuke/support -r cuke/steps/admin/reports cuke/features/admin/reports
+</pre>
+
+I got weary of doing that all the time, so I experimented with aliases and profiles, neither of which really met my needs. So I created Cellophane. With it, the same features could be as easy as:
+
+<pre>
+cellophane admin/*
+</pre>
+
+As time went on, more patterns began to emerge from my workflow, and with them, Cellophane gained abilities.
+
+h3. Configuration
+
+Cellophane is configured by a @.cellophane.yaml@ file that lives in the root of your project. In it, you can define where your features are located, where your steps are located, any other files/directories that should be required by Cucumber, and any default options you want to pass to Cucumber. It looks like
+
+<pre>
+cucumber: --format progress --no-profile
+feature_path: cuke/features
+step_path: cuke/steps
+requires: [cuke/support, cuke/steps/shared]
+</pre>
+
+This is the configuration used to support the project structure described above.
+
+@step_path@ can be one of two values
+
+# a directory relative to the project root
+# a hash that indicates steps are nested under the feature directories
+
+For the first, 
+
+<pre>
+feature_path: features
+step_path: features/step_definitions
+</pre>
+
+would be used for a Cucumber default directory structure:
+
+<pre>
+my_project
+	- app
+	- config
+	- features
+		- step_definitions
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+This is the default in Cellophane. If your cukes are structured like this, you need not do anything else and it should work.
+
+For the second style,
+
+<pre>
+feature_path: features
+step_path:
+  nested_in: step_definitions
+</pre>
+
+would be used if you nest your step definitions under each feature subdirectory, such as:
+
+<pre>
+my_project
+	- app
+	- config
+	- features
+		- admin
+			- step_definitions
+		- user
+			- step_definitions
+		- visitor
+			- step_definitions
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+@requires@ is an array of files/directories that Cucumber should require. If this is defined:
+
+<pre>
+requires: [cuke/support, /Users/me/shared/cool_library]
+</pre>
+
+@-r cuke/support -r /Users/me/shared/cool_library@ will be passed to Cucumber.
+
+h3. Operation
+
+Cellophane has the following command line options:
+
+<pre>
+Usage: cellophane [options] PATTERN
+    -r, --regexp                     PATTERN is a regular expression. Default is false.
+    -t, --tags TAGS                  Tags to include/exclude.
+    -c, --cucumber OPTIONS           Options to pass to cucumber.
+    -p, --print                      Echo the command instead of calling cucumber.
+    -d, --debug                      Require ruby-debug.
+    -h, --help                       Display this screen.
+</pre>
+
+PATTERN is the pattern of feature files that you are interested in. By default PATTERN is a glob, but by using the @-r/--regexp@ switch, you can pass a Ruby regular expression instead (no slashes necessary). When using a glob, you can specify that files matching the pattern are to be excluded by preceeding the pattern with a tilde (~). You can also combine include and exclude patterns in the same call. See below for examples.
+
+If you need to pass something through to Cucumber, such as a formatter, use the @-c/--cucumber@ switch. Depending on what it is you are passing through, you might need to enclose it in quotes. Do keep in mind that @-c/--cucumber@ on the command line overrides that defined in the YAML file.
+
+@-d/--debug@ is only useful for Cellophane development and will have no effect on Cucumber.
+
+h3. Examples and Notes
+
+h4. Features
+
+Feature path is relative to the project root. Consider the example project above:
+
+<pre>
+# run all features
+cellophane
+
+# run everything in admin
+cellophane admin/*
+
+# run everything in admin, except the reports
+cellophane admin/*,~admin/reports/*
+
+# run everything, except the admin reports
+cellophane ~admin/reports/*
+
+# run all user_maintenance features regardless of where they are
+cellophane */user_maintenance/*
+
+# run all features in files with email in the name
+cellophane **/*email*
+
+# or use a regular expression
+cellophane -r email
+</pre>
+
+h4. Step Definitions
+
+Cellophane does assume that your steps are defined in files that follow the naming of your features. For each feature file that is found, Cellophane will look for a step file with the same name and automatically require it. To require shared step definitions, put them in a folder and include that folder in the @requires@ section of @.cellophane.yaml@.
+
+h4. Tags
+
+You don't need to use @. You can you want, but it's not necessary.
+
+Cellophane supports OR, AND, and NOT tags. Examples will probably illustrate better than words.
+
+OR
+
+<pre>
+cellophane -t one,two
+cucumber -t @one,@two
+</pre>
+
+AND
+
+<pre>
+cellophane -t one,+two
+cucumber -t @one -t @two
+</pre>
+
+NOT
+
+<pre>
+cellophane -t one,~two
+cucumber -t @one -t ~@two
+</pre>
+
+Mixed tags in a logical order
+
+<pre>
+cellophane -t one,two,~three,+four
+cucumber -t @one,@two -t @four -t ~@three
+</pre>
+
+Mixed tags not in a logical order
+
+<pre>
+cellophane -t +four,one,~three,two
+cucumber -t @one,@two -t @four -t ~@three
+</pre>
+
+I like to tag my scenarios with numeric values so I can easily run a specific scenario at any give time. It may sound a bit unusual, but I find it very handy.
+
+Numeric OR ranges
+
+<pre>
+cellophane -t 1-3
+cucumber -t @1,@2,@3
+</pre>
+
+Numeric NOT ranges
+
+<pre>
+cellophane -t ~1-3
+cucumber -t ~@1 -t ~@2 -t ~@3
+</pre>
+
+Numeric OR range with a NOT
+
+<pre>
+cellophane -t 1-3,~2
+cucumber -t @1,@3
+</pre>
+

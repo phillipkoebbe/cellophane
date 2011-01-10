@@ -1,5 +1,6 @@
 Feature: Feature paths
 
+@1
 Scenario: Standard feature path
 
 Given a project directory with the following structure
@@ -10,6 +11,7 @@ When Cellophane is called with ""
 Then the command should not include "features"
 And the command should not include "-r features/step_definitions"
 
+@2
 Scenario: Non-standard feature path
 
 Given a project directory with the following structure

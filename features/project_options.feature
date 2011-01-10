@@ -1,5 +1,6 @@
 Feature: Project Options
 
+@1
 Scenario: Load project specific options from a file
 
 Given a project directory with the following structure
@@ -12,6 +13,7 @@ And a project options file with the following options
 When Cellophane is called with ""
 Then the command should include "--format progress --no-profile"
 
+@2
 Scenario: Override with command line
 
 Given a project directory with the following structure
