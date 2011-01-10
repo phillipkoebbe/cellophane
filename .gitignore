@@ -1,4 +1,4 @@
 .DS_Store
 .rvmrc
-.cellophane.rb
+.cellophane.yaml
 pkg/*
