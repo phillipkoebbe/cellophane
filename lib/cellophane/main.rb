@@ -4,6 +4,7 @@ require 'cellophane/options'
 
 module Cellophane
 	
+	VERSION = '0.1.2'
 	PROJECT_OPTIONS_FILE = '.cellophane.yaml'
 	
 	class Main
@@ -28,12 +29,14 @@ module Cellophane
 
 		def run
 			puts @message and return if @message
-			@options[:print] ? puts(@command) : system("#{@command}\n\n")
+			@options[:print] || @options[:version] ? puts(@command) : system("#{@command}\n\n")
 		end
 		
 		private
 		
 		def generate_command
+			return "cellophane #{Cellophane::VERSION}" if @options[:version]
+			
 			cuke_cmd = "#{@options[:cuke_command]} #{@options[:cucumber]}"
 
 			features = []

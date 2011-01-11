@@ -35,6 +35,11 @@ module Cellophane
 				end
 
 				# This displays the help screen, all programs are assumed to have this option.
+				opts.on( '-v', '--version', 'Display the version.' ) do
+					merged_options[:version] = true
+				end
+
+				# This displays the help screen, all programs are assumed to have this option.
 				opts.on( '-h', '--help', 'Display this screen.' ) do
 					puts opts
 					exit(0)

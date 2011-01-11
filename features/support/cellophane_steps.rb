@@ -41,3 +41,7 @@ Given /^a project options file with the following options$/ do |lines|
 	# already in the project dir
 	File.open(Cellophane::PROJECT_OPTIONS_FILE, 'w') { |f| f.write(contents) }
 end
+
+Given /^the current version should be displayed$/ do
+	@command.should =~ /#{Cellophane::VERSION}/
+end
