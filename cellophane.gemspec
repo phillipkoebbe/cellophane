@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{cellophane}
-  s.version = "0.1.1"
+  s.version = "0.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Phillip Koebbe"]
-  s.date = %q{2011-01-10}
+  s.date = %q{2011-01-11}
   s.default_executable = %q{cellophane}
   s.description = %q{Cellophane is a thin wrapper around Cucumber, making it easier to be creative when running features.}
   s.email = %q{phillip@livingdoor.net}
@@ -37,6 +37,7 @@ Gem::Specification.new do |s|
     "features/support/cellophane_steps.rb",
     "features/support/env.rb",
     "features/tags.feature",
+    "features/version.feature",
     "lib/cellophane/main.rb",
     "lib/cellophane/options.rb",
     "lib/cellophane/parser.rb"
