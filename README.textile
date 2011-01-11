@@ -6,6 +6,149 @@ h3. Installation
 
 @gem install cellophane@
 
+h3. Configuration
+
+h4. Project-specific File
+
+Cellophane can be configured project by project through the use of a @.cellophane.yaml@ file that lives in the root of your project. Configurable options are:
+
+*Directive*
+@cuke_command@
+
+*Explanation*
+Tells Cellophane how to call Cucumber. Defaults to @cucumber@.
+
+*Examples*
+@cuke_command: bundle exec cucumber@
+@cuke_command: script/cucumber@
+@cuke_command: cuke@ (as in a shell alias)
+
+*Directive*
+@cucumber@
+
+*Explanation*
+Options you want to pass to Cucumber by default.
+
+*Example*
+@cucumber: --format progress --no-profile@
+
+*Notes*
+Anything defined by @cucumber@ in the configuration file will be overwritten by the @-c/--cucumber@ command line switch (see below).
+
+*Directive*
+@feature_path@
+
+*Explanation*
+Root location of your feature files. Defaults @features@.
+
+*Example*
+@feature_path: cuke/features@
+
+*Notes*
+The path is relative to your project's root.
+
+*Directive*
+@step_path@
+
+*Explanation*
+Location of your step definitions. Defaults to @features/step_definitions@. It can be defined in two ways:
+
+# a path relative to the project root
+# nested in each feature directory
+
+*Examples*
+@step_path: cuke/steps@
+<pre>
+step_path:
+  nested_in: step_definition
+</pre>
+
+*Notes*
+Use the first method if your step defitions follow the structure of your features. For example:
+
+<pre>
+my_project
+	- app
+	- config
+	- cuke
+		- features
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- steps
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+Use the second method if each feature directory has its own step definitions directory:
+
+<pre>
+my_project
+	- app
+	- config
+	- features
+		- admin
+			- step_definitions
+		- user
+			- step_definitions
+		- visitor
+			- step_definitions
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+*Directive*
+@requires@
+
+*Explanation*
+Other directories or files that Cucumber needs to require. It is an array.
+
+*Examples*
+@requires: [cuke/support, cuke/steps/shared]@
+
+<pre>
+requires:
+  - cuke/support
+  - cuke/steps/shared
+</pre>
+
+*Notes*
+@requires@ are passed to Cucumber as defined, so absolute paths are respected.
+
+h4. Command Line
+
+Cellophane has the following command line options:
+
+<pre>
+Usage: cellophane [options] PATTERN
+    -r, --regexp                     PATTERN is a regular expression. Default is false.
+    -t, --tags TAGS                  Tags to include/exclude.
+    -c, --cucumber OPTIONS           Options to pass to cucumber.
+    -p, --print                      Echo the command instead of calling cucumber.
+    -d, --debug                      Require ruby-debug.
+    -v, --version                    Display the version.
+    -h, --help                       Display this screen.
+</pre>
+
+PATTERN is the pattern of feature files that you are interested in. By default PATTERN is a glob, but by using the @-r/--regexp@ switch, you can pass a Ruby regular expression instead (no slashes necessary). When using a glob, you can specify that files matching the pattern are to be excluded by preceeding the pattern with a tilde (~). You can also combine include and exclude patterns in the same call. See below for examples.
+
+If you need to pass something through to Cucumber, such as a formatter, use the @-c/--cucumber@ switch. Depending on what it is you are passing through, you might need to enclose it in quotes. Do keep in mind that @-c/--cucumber@ on the command line overrides that defined in the YAML file.
+
+@-d/--debug@ is only useful for Cellophane development and will have no effect on Cucumber.
+
 h3. History
 
 By default, Cucumber expects features to live in @features@ and step definitions to live in @features/step_definitions@. When running a feature, all step definitions are loaded unless you explicitly require just the ones you want. If you structure your project differently, you have to require files explicitly, which gets old real fast.
@@ -74,111 +217,11 @@ cellophane admin/*
 
 As time went on, more patterns began to emerge from my workflow, and with them, Cellophane gained abilities.
 
-h3. Configuration
-
-Cellophane is configured by a @.cellophane.yaml@ file that lives in the root of your project. In it, you can define where your features are located, where your steps are located, any other files/directories that should be required by Cucumber, and any default options you want to pass to Cucumber. It looks like
-
-<pre>
-cucumber: --format progress --no-profile
-feature_path: cuke/features
-step_path: cuke/steps
-requires: [cuke/support, cuke/steps/shared]
-</pre>
-
-This is the configuration used to support the project structure described above.
-
-@step_path@ can be one of two values
-
-# a directory relative to the project root
-# a hash that indicates steps are nested under the feature directories
-
-For the first, 
-
-<pre>
-feature_path: features
-step_path: features/step_definitions
-</pre>
-
-would be used for a Cucumber default directory structure:
-
-<pre>
-my_project
-	- app
-	- config
-	- features
-		- step_definitions
-		- support
-	- db
-	- lib
-	- etc, etc
-</pre>
-
-This is the default in Cellophane. If your cukes are structured like this, you need not do anything else and it should work.
-
-For the second style,
-
-<pre>
-feature_path: features
-step_path:
-  nested_in: step_definitions
-</pre>
-
-would be used if you nest your step definitions under each feature subdirectory, such as:
-
-<pre>
-my_project
-	- app
-	- config
-	- features
-		- admin
-			- step_definitions
-		- user
-			- step_definitions
-		- visitor
-			- step_definitions
-		- support
-	- db
-	- lib
-	- etc, etc
-</pre>
-
-@requires@ is an array of files/directories that Cucumber should require. If this is defined:
-
-<pre>
-requires: [cuke/support, /Users/me/shared/cool_library]
-</pre>
-
-@-r cuke/support -r /Users/me/shared/cool_library@ will be passed to Cucumber.
-
-Other configurable options:
-
-@cuke_command@ can be set to whatever command you use to invoke cucumber. By default, it is simply @cucumber@, but you could also use @bundler exec cucumber@, @script/cucumber@, or an alias you might have defined.
-
-h3. Operation
-
-Cellophane has the following command line options:
-
-<pre>
-Usage: cellophane [options] PATTERN
-    -r, --regexp                     PATTERN is a regular expression. Default is false.
-    -t, --tags TAGS                  Tags to include/exclude.
-    -c, --cucumber OPTIONS           Options to pass to cucumber.
-    -p, --print                      Echo the command instead of calling cucumber.
-    -d, --debug                      Require ruby-debug.
-    -h, --help                       Display this screen.
-</pre>
-
-PATTERN is the pattern of feature files that you are interested in. By default PATTERN is a glob, but by using the @-r/--regexp@ switch, you can pass a Ruby regular expression instead (no slashes necessary). When using a glob, you can specify that files matching the pattern are to be excluded by preceeding the pattern with a tilde (~). You can also combine include and exclude patterns in the same call. See below for examples.
-
-If you need to pass something through to Cucumber, such as a formatter, use the @-c/--cucumber@ switch. Depending on what it is you are passing through, you might need to enclose it in quotes. Do keep in mind that @-c/--cucumber@ on the command line overrides that defined in the YAML file.
-
-@-d/--debug@ is only useful for Cellophane development and will have no effect on Cucumber.
-
 h3. Examples and Notes
 
 h4. Features
 
-Feature path is relative to the project root. Consider the example project above:
+Using the example project above:
 
 <pre>
 # run all features
@@ -206,6 +249,8 @@ cellophane -r email
 h4. Step Definitions
 
 Cellophane does assume that your steps are defined in files that follow the naming of your features. For each feature file that is found, Cellophane will look for a step file with the same name and automatically require it. To require shared step definitions, put them in a folder and include that folder in the @requires@ section of @.cellophane.yaml@.
+
+For example, if you have a feature defined in @<feature path>/admin/user/account_maintenance.feature@, Cellophane will automatically require a step definition file located in @<step path>/admin/user/account_maintenance_steps.rb@. Unless you are using nested step definitions in @.cellophane.yaml@ (@step_path: {nested_in: steps }@, in which case Cellophane will automatically require @<feature path>/admin/user/steps/account_maintenance_steps.rb@ if it exists.
 
 h4. Tags
 
