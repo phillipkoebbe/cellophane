@@ -4,7 +4,7 @@ require 'cellophane/options'
 
 module Cellophane
 	
-	VERSION = '0.1.2'
+	VERSION = '0.1.3'
 	PROJECT_OPTIONS_FILE = '.cellophane.yaml'
 	
 	class Main
@@ -46,9 +46,8 @@ module Cellophane
 				@features.each do |file|
 					file_parts = split_feature(file)
 					features << construct_feature_file(file_parts[:path], file_parts[:name])
-					steps << construct_step_file(file_parts[:path], file_parts[:name])
+					steps += search_for_step_files(file_parts[:path], file_parts[:name])
 				end
-				
 			else
 				# if there are no features explicitly identified, then cucumber will run all. However,
 				# if we are using non-standard locations for features or step definitions, we must tell
@@ -67,11 +66,50 @@ module Cellophane
 			"#{@options[:feature_path]}/#{path}/#{file}.feature".gsub('//', '/')
 		end
 		
-		def construct_step_file(path, file)
-			step_path = @options[:step_path].is_a?(Hash) ? "#{@options[:feature_path]}/#{path}/#{@options[:step_path][:nested_in]}" : "#{@options[:step_path]}/#{path}"
+		def search_for_step_files(path, file)
+			steps = []
+			
+			steps_nested = @options[:step_path].is_a?(Hash)
+			nested_path = "#{@options[:feature_path]}/#{path}/#{@options[:step_path][:nested_in]}" if steps_nested
+			non_nested_path = "#{@options[:step_path]}/#{path}" unless steps_nested
+			
+			step_path = steps_nested ? nested_path : non_nested_path
 			step_file = "#{step_path}/#{file}_steps.rb".gsub('//', '/')
-			return File.exist?(step_file) ? step_file : nil
-		end
+			steps << step_file if File.exist?(step_file)
+
+			# now lets see if we need to load shared step files
+			
+			if @options[:shared]
+				if steps_nested
+					step_file = "#{step_path}/#{@options[:shared]}_steps.rb".gsub('//', '/')
+					steps << step_file if File.exist?(step_file)
+				else
+					# don't want to look in the directories that make up the step root
+					step_path.sub!(@options[:step_path_regexp], '')
+					
+					# make an array of the parts of the path that remain
+					step_path_parts = step_path.split('/')
+				
+					# if there are any unnecessary slashes, step_path_parts will have empty elements...get rid of them
+					step_path_parts.delete_if { |part| (part || '').strip.empty? }
+					
+					# for each path, look for a shared step file
+					while step_path_parts.any? do
+						step_file = "#{@options[:step_path]}/#{step_path_parts.join('/')}/#{@options[:shared]}_steps.rb"
+						steps << step_file if File.exist?(step_file)
+					
+						# get rid of the last path part
+						step_path_parts.pop
+					end
+					
+					# now look in the step path root
+					step_file = "#{@options[:step_path]}/#{@options[:shared]}_steps.rb"
+					steps << step_file if File.exist?(step_file)
+				end # steps are not netsted
+			end # if @options[:shared]
+
+			return steps
+		end # search_for_step_files
 		
 		def split_feature(file)
 			name = File.basename(file, '.feature')

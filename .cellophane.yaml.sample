@@ -1,3 +1,7 @@
+cuke_command: cucumber
+# cuke_command: bundle exec cucumber
+# cuke_command: script/cucumber
+# cuke_command: cuke # shell alias
 cucumber: --format progress --no-profile
 feature_path: cuke/features
 step_path: cuke/steps
@@ -5,3 +9,6 @@ step_path: cuke/steps
 #   nested_in: step_definitions
 requires:
   - cuke/support
+  - cuke/steps/shared
+shared: false # turn off auto-loading of step files named shared_steps.rb
+# shared: global # auto-load shared steps in files named global_steps.rb

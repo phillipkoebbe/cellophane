@@ -70,7 +70,7 @@ module Cellophane
 				if File.exist?(Cellophane::PROJECT_OPTIONS_FILE)
 					yaml_options = YAML.load_file(Cellophane::PROJECT_OPTIONS_FILE)
 					
-					['cucumber', 'cuke_command', 'feature_path', 'feature_path_regexp', 'step_path', 'requires'].each do |key|
+					['cuke_command', 'cucumber', 'feature_path', 'feature_path_regexp', 'step_path', 'shared', 'requires'].each do |key|
 						project_options[key.to_sym] = yaml_options[key] if yaml_options.has_key?(key)
 					end
 				end
@@ -87,6 +87,8 @@ module Cellophane
 					:feature_path => 'features',
 					:feature_path_regexp => nil,
 					:step_path => 'features/step_definitions',
+					:step_path_regexp => nil,
+					:shared => 'shared',
 					:requires => []
 				}
 			end
@@ -125,6 +127,11 @@ module Cellophane
 			# make a regexp out of the features path if there isn't one already. we need to escape slashes so the
 			# regexp can be made
 			tmp_options[:feature_path_regexp] = Regexp.new(tmp_options[:feature_path].gsub('/', '\/')) unless tmp_options[:feature_path_regexp]
+
+			# need to make a regexp out of the step path for use when looking for shared steps
+			if !tmp_options[:step_path].is_a?(Hash)
+				tmp_options[:step_path_regexp] = Regexp.new(tmp_options[:step_path].gsub('/', '\/')) unless tmp_options[:step_path_regexp]
+			end
 			
 			# just in case someone sets necessary values to nil, let's go back to defaults
 			tmp_options[:regexp] ||= defaults[:regexp]
@@ -132,6 +139,19 @@ module Cellophane
 			tmp_options[:step_path] ||= defaults[:step_path]
 			tmp_options[:requires] ||= defaults[:requires]
 			tmp_options[:cuke_command] ||= defaults[:cuke_command]
+			
+			# let's make sure :shared is something we can work with
+			shared = tmp_options[:shared].nil? ? 'shared' : tmp_options[:shared].to_s.strip
+			shared = 'shared' if shared.strip == ''
+			
+			if ['true', ''].include?(shared.downcase)
+				shared == 'shared'
+			elsif shared.downcase == 'false'
+				shared = false
+			end
+			# anything else, just leave it as is
+			
+			tmp_options[:shared] = shared
 			
 			# do what needs to be done on the pattern
 			unless tmp_options[:pattern].nil?

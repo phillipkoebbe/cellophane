@@ -57,11 +57,11 @@ Location of your step definitions. Defaults to @features/step_definitions@. It c
 # nested in each feature directory
 
 *Examples*
-@step_path: cuke/steps@
-<pre>
+<pre><code>
+step_path: cuke/steps
 step_path:
   nested_in: step_definition
-</pre>
+</code></pre>
 
 *Notes*
 Use the first method if your step defitions follow the structure of your features. For example:
@@ -109,6 +109,71 @@ my_project
 	- lib
 	- etc, etc
 </pre>
+
+*Directive*
+@shared@
+
+*Explanation*
+Automatically load steps named shared_steps.rb in all directories that comprise the step path for the current feature file. Defaults to true. This option allows you to share steps among features while keeping them organized according to scope.
+
+*Examples*
+@shared: global@ # instead of looking for shared_steps.rb, look for global_steps.rb
+@shared: false@ # don't automatically require shared steps
+
+*Notes*
+Consider the following project structure:
+
+<pre>
+my_project
+	- app
+	- config
+	- cuke
+		- features
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- steps
+			- admin
+				- reports
+				- user_maintenance
+			- user
+				- communication
+				- profile
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+When you run a feature in @features/admin/reports/weekly.feature@, Cellophane will automatically require shared steps found in the following locations:
+
+@steps/admin/reports/shared_steps.rb@ # steps specific to admin reports
+@steps/admin/shared_steps.rb@ # steps specific to admin
+@steps/shared_steps.rb@ # steps used by the whole application
+
+If your steps are nested, Cellophane will look for shared steps *only* in the nested step location. For example, if your project looks like
+
+<pre>
+my_project
+	- app
+	- config
+	- features
+		- admin
+			- step_definitions
+		- user
+			- step_definitions
+		- visitor
+			- step_definitions
+		- support
+	- db
+	- lib
+	- etc, etc
+</pre>
+
+and you run a feature in @features/admin/email.feature@, Cellophane will look for @features/admin/step_definitions/shared_steps.rb@.
 
 *Directive*
 @requires@
@@ -248,13 +313,13 @@ cellophane -r email
 
 h4. Step Definitions
 
-Cellophane does assume that your steps are defined in files that follow the naming of your features. For each feature file that is found, Cellophane will look for a step file with the same name and automatically require it. To require shared step definitions, put them in a folder and include that folder in the @requires@ section of @.cellophane.yaml@.
+Cellophane does assume that your steps are defined in files that follow the naming of your features. For each feature file that is found, Cellophane will look for a step file with the same name and automatically require it. To require shared step definitions, put them in a folder and include that folder in the @requires@ section of @.cellophane.yaml@. Also look into the @shared@ directive of the configuration file, which allows more fine-grained control of shared steps.
 
 For example, if you have a feature defined in @<feature path>/admin/user/account_maintenance.feature@, Cellophane will automatically require a step definition file located in @<step path>/admin/user/account_maintenance_steps.rb@. Unless you are using nested step definitions in @.cellophane.yaml@ (@step_path: {nested_in: steps }@, in which case Cellophane will automatically require @<feature path>/admin/user/steps/account_maintenance_steps.rb@ if it exists.
 
 h4. Tags
 
-You don't need to use @. You can you want, but it's not necessary.
+You don't need to use @. You can if you want, but it's not necessary.
 
 Cellophane supports OR, AND, and NOT tags. Examples will probably illustrate better than words.
 
